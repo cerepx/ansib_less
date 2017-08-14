@@ -1,0 +1,38 @@
+---
+- name: install and configure mariadb
+  hosts: centos
+  remote_user: vagrant
+  become: yes
+
+  vars:
+    mysql_port: 3306
+
+  tasks:
+  - name: Add repository
+    yum_repository:
+     name: epel
+     description: EPEL YUM repo
+     baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+
+  - name: create repository for mariadb
+    template: src=/home/vagrant/myProject/mariadb/mariadb.repo.j2 dest=/etc/yum.repos.d/MariaDB.repo
+
+  - name: install mariadb
+    yum: name=mariadb-server state=latest
+    with_items:
+      - gcc
+      - glibc
+
+  - name: create mysql config file
+    template: src=mariadb/my.cnf.j2 dest=/etc/my.cnf
+    notify: restart mariadb
+
+  - name: create mariadb log file
+    file: path=/var/log/mysqld.log state=touch owner=mysql group=mysql mode=0775
+    
+  - name: start mariadb service
+    service: name=mariadb state=started enabled=yes
+  
+  handlers:
+  - name: restart mariadb
+    service: name=mariadb state=restarted
