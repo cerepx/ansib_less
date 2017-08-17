@@ -4,8 +4,8 @@
   remote_user: vagrant
   become: yes
 
-  vars:
-    mysql_port: 3306
+  vars_files:
+   - mariadb_vars.yml 
 
   tasks:
   - name: Add repository
@@ -13,6 +13,11 @@
      name: epel
      description: EPEL YUM repo
      baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+
+  - name: update the system
+    yum: 
+      name: '*'
+      state: latest
 
   - name: create repository for mariadb
     template: src=/home/vagrant/myProject/mariadb/mariadb.repo.j2 dest=/etc/yum.repos.d/MariaDB.repo
@@ -24,11 +29,11 @@
       - glibc
 
   - name: create mysql config file
-    template: src=mariadb/my.cnf.j2 dest=/etc/my.cnf
+    template: src=my.cnf.j2 dest=/etc/my.cnf
     notify: restart mariadb
 
   - name: create mariadb log file
-    file: path=/var/log/mysqld.log state=touch owner=mysql group=mysql mode=0775
+    file: path={{log_path}}/mysqld.log state=touch owner=mysql group=mysql mode=0775
     
   - name: start mariadb service
     service: name=mariadb state=started enabled=yes

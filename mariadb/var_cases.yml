@@ -1,0 +1,19 @@
+---
+- name: testing variable stuff
+  hosts: all
+  remote_user: vagrant
+
+  tasks:
+  - name: get date on the server
+    shell: date
+    register: output
+  
+  - debug: msg="the date is {{output.stdout}}"
+
+  - debug: var=ansible_distribution_version
+
+  - name: group machines together temporarily 
+    group_by: key=centos_{{ansible_distribution_version}}
+    register: group_result
+
+  - debug: var=group_result
